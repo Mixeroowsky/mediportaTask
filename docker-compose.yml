@@ -1,0 +1,38 @@
+services:
+  app:
+    build:
+      context: ./mediporta
+      dockerfile: Dockerfile
+    container_name: api_container
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING}
+      - ASPNETCORE_URLS=http://0.0.0.0:5000
+    depends_on:
+      - mssql
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql_container
+    build:
+      context: .
+      dockerfile: Dockerfile.mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Med!porta1234
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  tests:
+    build:
+      context: .
+      dockerfile: mediporta.Tests/Dockerfile.tests
+    depends_on:
+      - app
+volumes:
+  mssql_data:

@@ -1,0 +1,43 @@
+name: Docker Compose Test
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checking out the repository
+        uses: actions/checkout@v3
+
+      - name: Verifying .env file
+        run: cat .env
+
+      - name: Building containers
+        run: docker compose up --build -d
+
+      - name: Checking app state
+        run: |
+          for i in {1..10}; do
+            if curl --fail http://localhost:5000/api/tags/fetch-tags; then
+              echo "Application is up and running!"
+              exit 0
+            fi
+            echo "Waiting for the application to be ready..."
+            sleep 3
+          done
+          echo "Application did not start in time. Logs:"
+          docker compose logs
+          exit 1
+
+      - name: Print Docker logs (debug)
+        if: failure()
+        run: docker compose logs

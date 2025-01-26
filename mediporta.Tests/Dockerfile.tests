@@ -1,0 +1,14 @@
+# Dockerfile.tests
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /app
+
+COPY ./mediporta/mediporta.csproj ./mediporta/
+COPY ./mediporta.Tests/mediporta.Tests.csproj ./mediporta.Tests/
+
+RUN dotnet restore ./mediporta.Tests/mediporta.Tests.csproj
+
+COPY . .
+
+RUN dotnet build ./mediporta.Tests/mediporta.Tests.csproj --configuration Release
+
+CMD dotnet test ./mediporta.Tests/mediporta.Tests.csproj --logger:trx
